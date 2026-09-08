@@ -15,20 +15,26 @@
             dolphin wordmark + HOME/TV/BROADBAND/MOBILE/DEALS links,
             bold uppercase hero banner). Used to demo Qualtrics Digital
             Experience Analytics (DXA) frustration-signal detection,
-            Page Tags, and intercept targeting in a live SE session.
+            Page Tags, intercept targeting, and embedded-data tagging
+            in a live SE session.
 
   Dolphin is a fictional, generic brand skin — reusable as a base
   template across multiple prospect pitches. Rebrand it (colors, logo,
   plan names) per opportunity rather than building a new sandbox from
-  scratch each time. The dolphin mark below is an original generic
-  line-art silhouette, not traced from any specific company's logo.
+  scratch each time. The dolphin mark below is an original redraw
+  (solid white leaping-dolphin silhouette, matching the reference
+  lockup's style/pose) — not a pixel trace of any specific company's
+  logo artwork.
 
   BEFORE ANY LIVE SESSION, an SE needs to:
-    1. Swap the placeholder GTM container ID (see <head> below) for
-       the real sandbox Tag Manager container, OR remove GTM entirely
-       and deploy the Qualtrics Project Deployment Code directly.
-    2. Swap the placeholder Qualtrics Project ID / Brand ID in the
-       commented deployment block below.
+    1. Fill in the SANDBOX CONFIG block below (qualtricsBrandBaseUrl,
+       qualtricsZoneId, gtmContainerId) with the real sandbox values.
+       This drives the "Open Sandbox" link and the GTM snippet.
+    2. Swap the placeholder GTM container ID for the real sandbox Tag
+       Manager container, OR remove GTM entirely and deploy the real
+       Qualtrics Project Deployment Code directly (copy it verbatim
+       from Directory > [your project] > Project Deployment — do not
+       hand-type it, the loader is minified/versioned per account).
     3. If demoing inside a site with a real CSP, confirm the current
        nonce property name/syntax against live Qualtrics support docs
        before wiring QSI.config — do not copy the placeholder as-is
@@ -37,11 +43,36 @@
        targeting the data-page-tag values set on <body> below, and
        the frustration-signal targeting logic (rage click / dead
        click) described in the facilitator notes panel.
-    5. If rebranding for a specific customer, restyle the CSS
+    5. In each intercept's embedded data config, add fields using the
+       "Value from JavaScript" type (see TAG MANAGER section below for
+       the exact expression syntax) to pull in whatever JSON the SE
+       enters live in the on-page Tag Manager panel.
+    6. If rebranding for a specific customer, restyle the CSS
        variables in :root below and swap "Dolphin" copy — everything
        is centralized there for a fast reskin.
   =====================================================================
 -->
+
+<!-- ============================================================
+     SANDBOX CONFIG — fill in before a live session
+     ============================================================ -->
+<script>
+  window.DOLPHIN_CONFIG = {
+    // Real Qualtrics brand URL, e.g. 'https://yourbrand.qualtrics.com'.
+    // Powers the "Open Sandbox" button in the Tag Manager panel.
+    qualtricsBrandBaseUrl: '',
+
+    // Real Website / App Insights Zone ID (format ZN_XXXXXXXXXXXXXXX)
+    // from Directory > [project] > Project Deployment. Display-only
+    // here (shown in the panel so the SE can confirm it's wired);
+    // the actual deployment script tag itself still needs to be
+    // pasted in verbatim below, per instruction #2 above.
+    qualtricsZoneId: '',
+
+    // Real GTM container ID, only relevant if deploying via GTM.
+    gtmContainerId: 'GTM-XXXXXXX'
+  };
+</script>
 
 <!-- ============================================================
      GOOGLE TAG MANAGER (placeholder container — swap GTM-XXXXXXX)
@@ -56,7 +87,7 @@
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-XXXXXXX'); /* <-- placeholder container ID */
+})(window,document,'script','dataLayer',(window.DOLPHIN_CONFIG&&window.DOLPHIN_CONFIG.gtmContainerId)||'GTM-XXXXXXX');
 </script>
 <!-- End Google Tag Manager -->
 
@@ -76,12 +107,55 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     // window.QSI.config.nonce = document.currentScript && document.currentScript.nonce;
 
     // --- PROJECT DEPLOYMENT CODE PLACEHOLDER ---
-    // Replace ZN_XXXXXXXXXXXXXXX with the real sandbox Brand ID / Project ID.
-    // var g=function(e,h){h.split(",").forEach(function(h){e[h]=e[h]||function(){(e[h].q=e[h].q||[]).push(arguments)}})};
-    // (function(){ /* real Qualtrics loader snippet goes here */ })();
+    // Replace this whole block with the real snippet copied from
+    // Directory > [project] > Project Deployment (it will contain your
+    // real ZN_XXXXXXXXXXXXXXX Zone ID). Do not hand-type the loader —
+    // paste it verbatim, it's versioned per account.
+    // <!--BEGIN QUALTRICS WEBSITE FEEDBACK SNIPPET-->
+    // ...real Qualtrics loader snippet goes here...
+    // <!--END WEBSITE FEEDBACK SNIPPET-->
 
     console.log('[Sandbox] Qualtrics Project Deployment Code placeholder — insert real snippet before live demo.');
   })();
+</script>
+
+<!-- ============================================================
+     TAG MANAGER — embedded-data engine (JSON in, global JS out)
+     ============================================================
+     WHAT THIS IS: a tiny in-page "tag manager" so an SE can type or
+     paste JSON at demo time and have it land somewhere Qualtrics can
+     actually read it — without touching a real GTM container.
+
+     HOW QUALTRICS READS IT: Qualtrics intercepts do not have a public
+     "push JSON to Qualtrics" API. Instead, on each intercept's
+     Embedded Data config, you add a field with value type
+     "Value from JavaScript" and give it a JS expression. Point that
+     expression at the accessor below:
+
+         window.getDolphinTag('dealStage')
+         window.getDolphinTag('campaign')
+         ...one Embedded Data field per key you want in Qualtrics...
+
+     The intercept engine evaluates that expression live when it
+     decides whether/what to show, so whatever is currently in
+     window.dolphinEmbeddedData at that moment is what gets sent —
+     no extra "push" call needed on the Qualtrics side. This is a
+     custom-coding pattern (Qualtrics Support won't advise on it
+     directly); re-confirm current behavior in your sandbox before
+     relying on it in front of a customer.
+
+     This also mirrors dataLayer.push() into GTM on every apply, so
+     if you DO have a real GTM container wired up, a GTM Custom HTML
+     tag / Data Layer Variable can pick the same values up instead.
+     ============================================================ -->
+<script>
+  window.dolphinEmbeddedData = {};
+
+  // Global accessor — this is the exact expression an SE types into
+  // a Qualtrics intercept's "Value from JavaScript" embedded data field.
+  window.getDolphinTag = function(key){
+    return (window.dolphinEmbeddedData || {})[key];
+  };
 </script>
 
 <style>
@@ -95,6 +169,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     --dt-grey:#F6F2FB;       /* pale lavender-mist background */
     --dt-white:#ffffff;
     --dt-error:#c0392b;
+    --dt-teal:#1b8f82;       /* tag manager panel accent */
     --dt-radius:14px;
   }
   *{box-sizing:border-box;}
@@ -262,6 +337,53 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   #se-panel code{background:var(--dt-grey);padding:1px 4px;border-radius:4px;font-size:12px;}
   #se-panel .step{margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #eee;}
   #se-panel .step:last-child{border-bottom:none;}
+
+  /* --- Tag manager panel --- */
+  #tm-toggle{
+    position:fixed;bottom:20px;left:20px;
+    background:var(--dt-teal);color:#fff;
+    border:none;border-radius:24px;padding:12px 18px;
+    font-weight:700;font-size:13px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.3);
+    z-index:999;
+  }
+  #tm-panel{
+    position:fixed;bottom:70px;left:20px;width:360px;max-height:75vh;
+    overflow-y:auto;background:#fff;border-radius:12px;
+    box-shadow:0 10px 40px rgba(0,0,0,.25);padding:18px;
+    display:none;z-index:999;font-size:13px;line-height:1.5;
+    border:2px solid var(--dt-teal);
+  }
+  #tm-panel h3{margin-top:0;font-size:14px;}
+  #tm-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#5c6b6a;margin:16px 0 6px;}
+  #tm-panel p.hint{font-size:12px;color:#6b5b7d;margin:0 0 8px;}
+  #tm-json{
+    width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px;border:1px solid #d7e3e2;border-radius:8px;padding:10px;resize:vertical;
+  }
+  #tm-error{color:var(--dt-error);font-size:12px;margin-top:6px;display:none;}
+  #tm-live-preview{
+    background:var(--dt-grey);border-radius:8px;padding:10px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px;white-space:pre-wrap;word-break:break-all;max-height:160px;overflow-y:auto;
+  }
+  .tm-row{display:flex;gap:8px;margin-top:8px;}
+  .tm-btn{
+    flex:1;border:none;border-radius:8px;padding:9px 10px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .tm-btn.primary{background:var(--dt-teal);color:#fff;}
+  .tm-btn.ghost{background:var(--dt-grey);color:var(--dt-ink);}
+  .tm-key-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--dt-grey);border-radius:6px;padding:5px 8px;margin-bottom:4px;font-size:11.5px;
+  }
+  .tm-key-row code{font-size:11px;}
+  .tm-key-row button{
+    border:none;background:none;color:var(--dt-teal);font-size:11px;font-weight:700;cursor:pointer;
+  }
+  #tm-sandbox-link{
+    display:block;text-align:center;margin-top:4px;font-size:12px;color:#6b5b7d;
+  }
 </style>
 </head>
 <body data-page-tag="plan-select">
@@ -272,10 +394,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- ================= TOP NAV ================= -->
 <div class="topnav">
   <div class="logo">
-    <svg width="30" height="22" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M4 32C12 16 26 4 42 4c8 0 15 3 15 3s-3 9-14 12c7 3 15 3 15 3s-11 11-26 9C22 33 10 39 4 32Z"
-            stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="40" cy="11" r="1.6" fill="white"/>
+    <svg width="32" height="32" viewBox="-10 -10 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g transform="rotate(-32 50 35)">
+        <path d="M 96,20 C 84,4 50,-4 24,16 C 38,26 62,27 84,25 C 90,24 94,22 96,20 Z" fill="white"/>
+        <path d="M 25,15 L 6,7 L 15,18 L 3,28 L 23,21 Z" fill="white"/>
+        <path d="M 52,3 L 62,-10 L 63,4 Z" fill="white"/>
+        <circle cx="83" cy="11" r="1.4" fill="#3c1f66"/>
+      </g>
     </svg>
     Dolphin
   </div>
@@ -378,7 +503,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </main>
 
 <!-- ================= SE FACILITATOR NOTES PANEL (presenter-only) ================= -->
-<button id="se-toggle" onclick="togglePanel()">SE Notes ▲</button>
+<button id="se-toggle" onclick="toggleSENotes()">SE Notes ▲</button>
 <div id="se-panel">
   <h3>Facilitator script — map clicks to talk track</h3>
 
@@ -418,20 +543,64 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </div>
 
   <div class="step">
+    <strong>Tag Manager (bottom-left button)</strong><br>
+    Open the teal <code>Tags</code> panel and edit the JSON live — e.g. add
+    <code>"dealStage":"POC"</code> — then hit Apply. Talk track: "This is
+    exactly what your existing tag manager would hand Qualtrics — a plain
+    JSON object. On our side, an intercept just points an Embedded Data
+    field at <code>window.getDolphinTag('dealStage')</code> and it's
+    instantly available for targeting, personalization, or reporting. No
+    redeploy needed to add a new field."
+  </div>
+
+  <div class="step">
     <strong>Deployment story</strong><br>
     Point to the page &lt;head&gt; source: GTM container placeholder +
-    commented Qualtrics Project Deployment Code inside it. Talk track:
-    "This loads asynchronously through your existing tag manager — no page
-    slowdown, no new IT deployment for every intercept change afterward."
+    commented Qualtrics Project Deployment Code inside it, plus the Tag
+    Manager engine that feeds embedded data to both Qualtrics and
+    <code>dataLayer</code>. Talk track: "This loads asynchronously through
+    your existing tag manager — no page slowdown, no new IT deployment for
+    every intercept or embedded-data change afterward."
   </div>
 
   <div class="step">
     <strong>Before the real session</strong><br>
-    Swap <code>GTM-XXXXXXX</code> and the Qualtrics Project ID placeholders
-    for the real sandbox IDs. Re-verify the CSP nonce property name against
-    current Qualtrics docs before sharing any code with the customer's dev
-    lead. Restyle the <code>:root</code> variables and plan names if
-    reskinning for a specific opportunity.
+    Fill in <code>window.DOLPHIN_CONFIG</code> and paste the real Qualtrics
+    Project Deployment Code (from Directory &gt; project &gt; Project
+    Deployment) in place of the placeholder. Re-verify the CSP nonce
+    property name and the "Value from JavaScript" embedded-data behavior
+    against current Qualtrics docs before sharing any code with the
+    customer's dev lead. Restyle the <code>:root</code> variables and plan
+    names if reskinning for a specific opportunity.
+  </div>
+</div>
+
+<!-- ================= TAG MANAGER PANEL (presenter-only) ================= -->
+<button id="tm-toggle" onclick="toggleTagManager()">Tags ▲</button>
+<div id="tm-panel">
+  <h3>Tag Manager — embedded data</h3>
+  <p class="hint">
+    Edit this JSON and click Apply. It's written to
+    <code>window.dolphinEmbeddedData</code> and mirrored to
+    <code>dataLayer</code>. Point a Qualtrics intercept's "Value from
+    JavaScript" embedded data field at <code>window.getDolphinTag('key')</code>
+    to pull any of it in.
+  </p>
+  <textarea id="tm-json" spellcheck="false"></textarea>
+  <div id="tm-error"></div>
+  <div class="tm-row">
+    <button class="tm-btn primary" onclick="applyEmbeddedDataJSON()">Apply as embedded data</button>
+    <button class="tm-btn ghost" onclick="resetTagManagerToStepDefaults()">Reset to step defaults</button>
+  </div>
+
+  <h4>Live values Qualtrics would read</h4>
+  <div id="tm-live-preview">{}</div>
+  <div id="tm-key-list"></div>
+
+  <h4>Sandbox link</h4>
+  <p class="hint">Reads from <code>window.DOLPHIN_CONFIG.qualtricsBrandBaseUrl</code> — fill that in above before use.</p>
+  <div class="tm-row">
+    <button class="tm-btn ghost" onclick="openQualtricsSandbox()">Open Qualtrics sandbox ↗</button>
   </div>
 </div>
 
@@ -446,9 +615,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     4:'Welcome aboard'
   };
 
+  var stepTags = {1:'plan-select',2:'sim-activation',3:'payment-details',4:'confirmation'};
+  var selectedPlanName = null;
+
   function selectPlan(el, name){
     document.querySelectorAll('.plan-card').forEach(function(g){g.classList.remove('selected');});
     el.classList.add('selected');
+    selectedPlanName = name;
+    mergeEmbeddedData({ planSelected: name }, true);
   }
 
   function goTo(step){
@@ -458,14 +632,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
     document.getElementById('hero-heading').textContent = heroHeadings[step];
 
-    var tags = {1:'plan-select',2:'sim-activation',3:'payment-details',4:'confirmation'};
     // Page Tag pattern: update a body data-attribute per "page" so
     // Qualtrics / GTM triggers can group these views into one funnel.
-    document.body.setAttribute('data-page-tag', tags[step]);
+    document.body.setAttribute('data-page-tag', stepTags[step]);
 
-    // In a live deployment, you'd also push a dataLayer event here so
-    // GTM can fire a "virtual pageview" for Qualtrics on each step, e.g.:
-    // window.dataLayer && window.dataLayer.push({event:'virtual_pageview', pageTag: tags[step]});
+    // Keep the funnelStep/pageTag embedded data fields current as the
+    // demo progresses, without clobbering anything the SE typed in
+    // manually via the Tag Manager panel.
+    mergeEmbeddedData({ funnelStep: step, pageTag: stepTags[step] }, true);
+
+    // In a live deployment with a real GTM container, this also fires a
+    // "virtual pageview" so Qualtrics (deployed via GTM) sees each step:
+    window.dataLayer && window.dataLayer.push({event:'virtual_pageview', pageTag: stepTags[step]});
   }
 
   function handlePayClick(){
@@ -479,7 +657,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     setTimeout(function(){ goTo(4); }, 400);
   }
 
-  function togglePanel(){
+  function toggleSENotes(){
     var panel = document.getElementById('se-panel');
     var btn = document.getElementById('se-toggle');
     var open = panel.style.display === 'block';
@@ -489,15 +667,113 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   function resetDemo(){
     payClickCount = 0;
+    selectedPlanName = null;
     document.getElementById('pay-btn').textContent = 'Complete activation';
     document.querySelectorAll('.plan-card').forEach(function(g){g.classList.remove('selected');});
     document.getElementById('sim').value='';
     document.getElementById('fullname').value='';
     document.getElementById('card').value='';
     document.getElementById('expiry').value='';
+    resetTagManagerToStepDefaults();
     goTo(1);
   }
+
+  // ================= TAG MANAGER =================
+
+  function defaultTagsForStep(step){
+    return {
+      pageTag: stepTags[step],
+      funnelStep: step,
+      planSelected: selectedPlanName,
+      dealStage: 'discovery',
+      campaign: 'dolphin-dxa-sandbox-demo'
+    };
+  }
+
+  function renderTagManager(){
+    var pretty = JSON.stringify(window.dolphinEmbeddedData, null, 2);
+    document.getElementById('tm-live-preview').textContent = pretty;
+
+    var keyList = document.getElementById('tm-key-list');
+    keyList.innerHTML = '';
+    Object.keys(window.dolphinEmbeddedData).forEach(function(key){
+      var row = document.createElement('div');
+      row.className = 'tm-key-row';
+      var codeEl = document.createElement('code');
+      codeEl.textContent = "getDolphinTag('" + key + "')";
+      var copyBtn = document.createElement('button');
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = function(){ copySnippet(key); };
+      row.appendChild(codeEl);
+      row.appendChild(copyBtn);
+      keyList.appendChild(row);
+    });
+  }
+
+  // Merge new keys into the live embedded data object. When silent=true
+  // (called from demo-flow code like goTo/selectPlan) this won't stomp on
+  // anything the SE already typed into the JSON box and applied.
+  function mergeEmbeddedData(newFields, silent){
+    window.dolphinEmbeddedData = Object.assign({}, window.dolphinEmbeddedData, newFields);
+    if(!silent){
+      document.getElementById('tm-json').value = JSON.stringify(window.dolphinEmbeddedData, null, 2);
+    }
+    renderTagManager();
+    window.dataLayer && window.dataLayer.push({event:'embedded_data_update', embeddedData: window.dolphinEmbeddedData});
+  }
+
+  function applyEmbeddedDataJSON(){
+    var errEl = document.getElementById('tm-error');
+    var raw = document.getElementById('tm-json').value;
+    try{
+      var parsed = JSON.parse(raw);
+      errEl.style.display = 'none';
+      window.dolphinEmbeddedData = parsed;
+      renderTagManager();
+      window.dataLayer && window.dataLayer.push({event:'embedded_data_update', embeddedData: window.dolphinEmbeddedData});
+    }catch(e){
+      errEl.textContent = 'Invalid JSON: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  function resetTagManagerToStepDefaults(){
+    var defaults = defaultTagsForStep(currentStep);
+    window.dolphinEmbeddedData = defaults;
+    document.getElementById('tm-json').value = JSON.stringify(defaults, null, 2);
+    document.getElementById('tm-error').style.display = 'none';
+    renderTagManager();
+    window.dataLayer && window.dataLayer.push({event:'embedded_data_update', embeddedData: window.dolphinEmbeddedData});
+  }
+
+  function copySnippet(key){
+    var text = "window.getDolphinTag('" + key + "')";
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text);
+    }
+  }
+
+  function openQualtricsSandbox(){
+    var url = window.DOLPHIN_CONFIG && window.DOLPHIN_CONFIG.qualtricsBrandBaseUrl;
+    if(!url){
+      alert('Set window.DOLPHIN_CONFIG.qualtricsBrandBaseUrl in the <head> config block first.');
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
+  }
+
+  function toggleTagManager(){
+    var panel = document.getElementById('tm-panel');
+    var btn = document.getElementById('tm-toggle');
+    var open = panel.style.display === 'block';
+    panel.style.display = open ? 'none' : 'block';
+    btn.textContent = open ? 'Tags ▲' : 'Tags ▼';
+  }
+
+  // Seed the tag manager with step-1 defaults on load.
+  resetTagManagerToStepDefaults();
 </script>
 
 </body>
 </html>
+```
