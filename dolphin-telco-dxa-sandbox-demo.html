@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sandbox Demo — Dolphin activation flow (Qualtrics DXA)</title>
+
+<!--
+  =====================================================================
+  QUALTRICS SOLUTION ENGINEERING SANDBOX — INTERNAL DEMO BUILD
+  =====================================================================
+  Purpose : A mocked-up mobile network plan-purchase + SIM activation
+            funnel for a fictional generic telco ("Dolphin"), restyled
+            to match a purple/brick-texture brand reference (nav with
+            dolphin wordmark + HOME/TV/BROADBAND/MOBILE/DEALS links,
+            bold uppercase hero banner). Used to demo Qualtrics Digital
+            Experience Analytics (DXA) frustration-signal detection,
+            Page Tags, and intercept targeting in a live SE session.
+
+  Dolphin is a fictional, generic brand skin — reusable as a base
+  template across multiple prospect pitches. Rebrand it (colors, logo,
+  plan names) per opportunity rather than building a new sandbox from
+  scratch each time. The dolphin mark below is an original generic
+  line-art silhouette, not traced from any specific company's logo.
+
+  BEFORE ANY LIVE SESSION, an SE needs to:
+    1. Swap the placeholder GTM container ID (see <head> below) for
+       the real sandbox Tag Manager container, OR remove GTM entirely
+       and deploy the Qualtrics Project Deployment Code directly.
+    2. Swap the placeholder Qualtrics Project ID / Brand ID in the
+       commented deployment block below.
+    3. If demoing inside a site with a real CSP, confirm the current
+       nonce property name/syntax against live Qualtrics support docs
+       before wiring QSI.config — do not copy the placeholder as-is
+       into a customer-facing CSP without checking current docs.
+    4. Build the matching Qualtrics intercept(s) in the sandbox brand,
+       targeting the data-page-tag values set on <body> below, and
+       the frustration-signal targeting logic (rage click / dead
+       click) described in the facilitator notes panel.
+    5. If rebranding for a specific customer, restyle the CSS
+       variables in :root below and swap "Dolphin" copy — everything
+       is centralized there for a fast reskin.
+  =====================================================================
+-->
+
+<!-- ============================================================
+     GOOGLE TAG MANAGER (placeholder container — swap GTM-XXXXXXX)
+     Standard, unmodified GTM head snippet. In this pattern, GTM is
+     the deployment vehicle for the Qualtrics Project Deployment
+     Code below, rather than hardcoding Qualtrics directly on-page —
+     this mirrors how most enterprise sites (incl. Adobe Launch /
+     Tealium setups) actually deploy Qualtrics.
+     ============================================================ -->
+<script>
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-XXXXXXX'); /* <-- placeholder container ID */
+</script>
+<!-- End Google Tag Manager -->
+
+<!-- ============================================================
+     QUALTRICS PROJECT DEPLOYMENT CODE — placeholder
+     In production this block lives INSIDE a GTM Custom HTML tag
+     firing on "All Pages", not hardcoded here. Left inline (commented
+     as a live script block) purely so the sandbox actually fires
+     Qualtrics without needing a real GTM container configured for
+     this demo.
+     ============================================================ -->
+<script type="text/javascript">
+  (function(){
+    // --- CSP NONCE SUPPORT (verify current property name in docs before reuse) ---
+    // window.QSI = window.QSI || {};
+    // window.QSI.config = window.QSI.config || {};
+    // window.QSI.config.nonce = document.currentScript && document.currentScript.nonce;
+
+    // --- PROJECT DEPLOYMENT CODE PLACEHOLDER ---
+    // Replace ZN_XXXXXXXXXXXXXXX with the real sandbox Brand ID / Project ID.
+    // var g=function(e,h){h.split(",").forEach(function(h){e[h]=e[h]||function(){(e[h].q=e[h].q||[]).push(arguments)}})};
+    // (function(){ /* real Qualtrics loader snippet goes here */ })();
+
+    console.log('[Sandbox] Qualtrics Project Deployment Code placeholder — insert real snippet before live demo.');
+  })();
+</script>
+
+<style>
+  :root{
+    /* ---- Dolphin brand tokens — restyle here to reskin the whole demo ---- */
+    --dt-purple-1:#6a3fb0;   /* hero gradient start */
+    --dt-purple-2:#3c1f66;   /* hero gradient end */
+    --dt-primary:#5C2D91;    /* buttons / selected state */
+    --dt-accent:#c9a6f0;     /* light lavender accent */
+    --dt-ink:#241634;        /* deep plum text */
+    --dt-grey:#F6F2FB;       /* pale lavender-mist background */
+    --dt-white:#ffffff;
+    --dt-error:#c0392b;
+    --dt-radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--dt-grey);
+    color:var(--dt-ink);
+  }
+  .sandbox-banner{
+    background:var(--dt-ink);
+    color:var(--dt-accent);
+    text-align:center;
+    font-size:12px;
+    letter-spacing:.05em;
+    padding:6px 10px;
+    text-transform:uppercase;
+  }
+
+  /* ---- Top nav (logo + HOME/TV/BROADBAND/MOBILE/DEALS/search) ---- */
+  .topnav{
+    background:var(--dt-purple-2);
+    padding:16px 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topnav .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--dt-white);
+    font-weight:800;
+    font-size:20px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .topnav .logo svg{display:block;}
+  .topnav nav{
+    display:flex;
+    align-items:center;
+    gap:28px;
+  }
+  .topnav nav a{
+    color:var(--dt-white);
+    text-decoration:none;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    opacity:.9;
+  }
+  .topnav nav a:hover{opacity:1;text-decoration:underline;}
+  .topnav nav .search-icon{opacity:.9;display:flex;align-items:center;}
+
+  /* ---- Hero band: purple gradient + subtle brick/tile texture ---- */
+  .hero{
+    position:relative;
+    padding:56px 24px 72px;
+    text-align:center;
+    background-color:var(--dt-purple-1);
+    background-image:
+      linear-gradient(135deg, var(--dt-purple-1) 0%, var(--dt-purple-2) 100%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0px, rgba(255,255,255,.05) 1px, transparent 1px, transparent 46px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0px, rgba(255,255,255,.05) 1px, transparent 1px, transparent 90px);
+    background-blend-mode:overlay, normal, normal;
+  }
+  .hero h1{
+    color:var(--dt-white);
+    font-size:30px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    margin:0;
+    max-width:620px;
+    margin:0 auto;
+    line-height:1.3;
+  }
+
+  main{
+    max-width:520px;
+    margin:-40px auto 32px;
+    position:relative;
+    background:var(--dt-white);
+    border-radius:var(--dt-radius);
+    box-shadow:0 12px 32px rgba(36,22,52,.18);
+    padding:32px;
+    min-height:380px;
+  }
+  h1{font-size:22px;margin:0 0 6px;}
+  p.sub{color:#6b5b7d;margin:0 0 24px;font-size:14px;}
+  .plan-card{
+    border:2px solid #ece3f7;
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .plan-card:hover{border-color:var(--dt-accent);}
+  .plan-card.selected{border-color:var(--dt-primary);background:#f6effc;}
+  .plan-card .price{font-weight:800;font-size:18px;color:var(--dt-primary);}
+  label{display:block;font-size:13px;font-weight:600;margin:14px 0 4px;}
+  input{
+    width:100%;
+    padding:12px;
+    border:1px solid #e2d6f0;
+    border-radius:8px;
+    font-size:14px;
+  }
+  .btn{
+    display:inline-block;
+    width:100%;
+    text-align:center;
+    background:var(--dt-primary);
+    color:var(--dt-white);
+    border:none;
+    border-radius:30px;
+    padding:14px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:22px;
+  }
+  .btn:active{transform:scale(.99);}
+  .link-row{
+    text-align:center;
+    margin-top:14px;
+  }
+  .link-row a{
+    color:#6b5b7d;
+    font-size:13px;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .success-icon{
+    width:64px;height:64px;border-radius:50%;
+    background:var(--dt-primary);
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;margin:0 auto 16px;
+    color:var(--dt-white);
+  }
+  .center{text-align:center;}
+
+  /* --- Facilitator notes panel --- */
+  #se-toggle{
+    position:fixed;bottom:20px;right:20px;
+    background:var(--dt-ink);color:var(--dt-accent);
+    border:none;border-radius:24px;padding:12px 18px;
+    font-weight:700;font-size:13px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.3);
+    z-index:999;
+  }
+  #se-panel{
+    position:fixed;bottom:70px;right:20px;width:340px;max-height:70vh;
+    overflow-y:auto;background:#fff;border-radius:12px;
+    box-shadow:0 10px 40px rgba(0,0,0,.25);padding:18px;
+    display:none;z-index:999;font-size:13px;line-height:1.5;
+    border:2px solid var(--dt-accent);
+  }
+  #se-panel h3{margin-top:0;font-size:14px;}
+  #se-panel code{background:var(--dt-grey);padding:1px 4px;border-radius:4px;font-size:12px;}
+  #se-panel .step{margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #eee;}
+  #se-panel .step:last-child{border-bottom:none;}
+</style>
+</head>
+<body data-page-tag="plan-select">
+
+<!-- ================= SANDBOX BANNER ================= -->
+<div class="sandbox-banner">Qualtrics DXA Sandbox — Internal SE Demo Only — Fictional Brand (Dolphin)</div>
+
+<!-- ================= TOP NAV ================= -->
+<div class="topnav">
+  <div class="logo">
+    <svg width="30" height="22" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M4 32C12 16 26 4 42 4c8 0 15 3 15 3s-3 9-14 12c7 3 15 3 15 3s-11 11-26 9C22 33 10 39 4 32Z"
+            stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="40" cy="11" r="1.6" fill="white"/>
+    </svg>
+    Dolphin
+  </div>
+  <nav>
+    <a href="#" onclick="return false;">Home</a>
+    <a href="#" onclick="return false;">TV</a>
+    <a href="#" onclick="return false;">Broadband</a>
+    <a href="#" onclick="return false;">Mobile</a>
+    <a href="#" onclick="return false;">Deals</a>
+    <span class="search-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="7" stroke="white" stroke-width="2"/>
+        <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+  </nav>
+</div>
+
+<!-- ================= HERO BANNER ================= -->
+<div class="hero">
+  <h1 id="hero-heading">Pick your plan, SIM and savings</h1>
+</div>
+
+<main>
+
+  <!-- ===================== STEP 1: PLAN SELECT ===================== -->
+  <section id="step-1" class="step-view">
+    <h1>Pick your plan</h1>
+    <p class="sub">Unlimited data, texts &amp; minutes. Cancel anytime.</p>
+
+    <div class="plan-card" data-plan="Splash" onclick="selectPlan(this,'Splash')">
+      <div><strong>Splash</strong><br><span style="font-size:12px;color:#9a8bad;">6GB data</span></div>
+      <div class="price">£10</div>
+    </div>
+    <div class="plan-card" data-plan="Wave" onclick="selectPlan(this,'Wave')">
+      <div><strong>Wave</strong><br><span style="font-size:12px;color:#9a8bad;">25GB data</span></div>
+      <div class="price">£15</div>
+    </div>
+    <div class="plan-card" data-plan="Deep Dive" onclick="selectPlan(this,'Deep Dive')">
+      <div><strong>Deep Dive</strong><br><span style="font-size:12px;color:#9a8bad;">Unlimited data</span></div>
+      <div class="price">£25</div>
+    </div>
+
+    <button class="btn" onclick="goTo(2)">Continue</button>
+
+    <div class="link-row">
+      <!-- DEAD CLICK TRAP #1: intentionally wired to do nothing -->
+      <a onclick="return false;">Have a referral code? Apply it here</a>
+    </div>
+  </section>
+
+  <!-- ===================== STEP 2: SIM ACTIVATION ===================== -->
+  <section id="step-2" class="step-view" style="display:none;">
+    <h1>Activate your SIM</h1>
+    <p class="sub">Enter the 19-digit number on the back of your SIM card.</p>
+
+    <label for="sim">SIM serial number</label>
+    <input id="sim" type="text" placeholder="8944 XXXX XXXX XXXX XXX">
+
+    <label for="fullname">Full name</label>
+    <input id="fullname" type="text" placeholder="As it appears on ID">
+
+    <button class="btn" onclick="goTo(3)">Continue</button>
+
+    <div class="link-row">
+      <!-- DEAD CLICK TRAP #2 -->
+      <a onclick="return false;">Why do we need this?</a>
+    </div>
+  </section>
+
+  <!-- ===================== STEP 3: PAYMENT (rage-click trap lives here) ===================== -->
+  <section id="step-3" class="step-view" style="display:none;">
+    <h1>Payment details</h1>
+    <p class="sub">Masked client-side before it ever leaves your browser.</p>
+
+    <label for="card">Card number</label>
+    <input id="card" type="text" placeholder="•••• •••• •••• ••••" maxlength="19">
+
+    <label for="expiry">Expiry</label>
+    <input id="expiry" type="text" placeholder="MM/YY">
+
+    <!--
+      RAGE CLICK TRAP: this button silently no-ops for ~1.2s the first
+      few times it's clicked (simulating a slow/broken validation call),
+      inviting exactly the "4 clicks, <200px, <300ms apart" pattern
+      Qualtrics flags as a Rage Click. After a few clicks it "resolves"
+      so the demo can move on.
+    -->
+    <button class="btn" id="pay-btn" onclick="handlePayClick()">Complete activation</button>
+  </section>
+
+  <!-- ===================== STEP 4: CONFIRMATION ===================== -->
+  <section id="step-4" class="step-view" style="display:none;">
+    <div class="success-icon">✓</div>
+    <h1 class="center">You're all set</h1>
+    <p class="sub center">Your plan is active. Welcome to Dolphin.</p>
+    <button class="btn" onclick="resetDemo()">Restart demo</button>
+  </section>
+
+</main>
+
+<!-- ================= SE FACILITATOR NOTES PANEL (presenter-only) ================= -->
+<button id="se-toggle" onclick="togglePanel()">SE Notes ▲</button>
+<div id="se-panel">
+  <h3>Facilitator script — map clicks to talk track</h3>
+
+  <div class="step">
+    <strong>Step 1 · Dead Click</strong><br>
+    Click <em>"Have a referral code? Apply it here."</em> It does nothing —
+    that's the trap. In Digital Assist this logs as a <code>Dead Click</code>.
+    Talk track: "Traditional analytics wouldn't flag this at all — the user
+    didn't bounce, didn't error out. Qualtrics catches the moment intent
+    silently failed."
+  </div>
+
+  <div class="step">
+    <strong>Step 2 · Second Dead Click</strong><br>
+    Click <em>"Why do we need this?"</em> — same trap, different page. Use it
+    to show <code>Page Tags</code> grouping step-1/step-2/step-3 into one
+    "SIM Activation Funnel" report instead of three separate raw URLs.
+  </div>
+
+  <div class="step">
+    <strong>Step 3 · Rage Click</strong><br>
+    Click <em>"Complete activation"</em> rapidly, 4+ times, in quick succession.
+    The button intentionally stalls for ~1.2s on first load to invite exactly
+    that pattern. This is the <code>Rage Click</code> signal
+    (4+ clicks, &lt;200px apart, &lt;300ms apart). Pivot here to the
+    Digital Opportunities Widget and Frustration Targeting Logic —
+    "this is the moment we'd trigger an empathetic intercept or route to
+    a support team with full session context attached."
+  </div>
+
+  <div class="step">
+    <strong>Bonus dead-click zone</strong><br>
+    The top nav (Home/TV/Broadband/Mobile/Deals/search) is decorative and
+    also no-ops — real global nav often behaves this way in production
+    too when links aren't wired to real routes. Useful as an "in the wild,
+    this happens more than people think" aside if it comes up naturally.
+  </div>
+
+  <div class="step">
+    <strong>Deployment story</strong><br>
+    Point to the page &lt;head&gt; source: GTM container placeholder +
+    commented Qualtrics Project Deployment Code inside it. Talk track:
+    "This loads asynchronously through your existing tag manager — no page
+    slowdown, no new IT deployment for every intercept change afterward."
+  </div>
+
+  <div class="step">
+    <strong>Before the real session</strong><br>
+    Swap <code>GTM-XXXXXXX</code> and the Qualtrics Project ID placeholders
+    for the real sandbox IDs. Re-verify the CSP nonce property name against
+    current Qualtrics docs before sharing any code with the customer's dev
+    lead. Restyle the <code>:root</code> variables and plan names if
+    reskinning for a specific opportunity.
+  </div>
+</div>
+
+<script>
+  var currentStep = 1;
+  var payClickCount = 0;
+
+  var heroHeadings = {
+    1:'Pick your plan, SIM and savings',
+    2:'Almost there — activate your SIM',
+    3:'Secure checkout',
+    4:'Welcome aboard'
+  };
+
+  function selectPlan(el, name){
+    document.querySelectorAll('.plan-card').forEach(function(g){g.classList.remove('selected');});
+    el.classList.add('selected');
+  }
+
+  function goTo(step){
+    document.querySelectorAll('.step-view').forEach(function(s){s.style.display='none';});
+    document.getElementById('step-'+step).style.display='block';
+    currentStep = step;
+
+    document.getElementById('hero-heading').textContent = heroHeadings[step];
+
+    var tags = {1:'plan-select',2:'sim-activation',3:'payment-details',4:'confirmation'};
+    // Page Tag pattern: update a body data-attribute per "page" so
+    // Qualtrics / GTM triggers can group these views into one funnel.
+    document.body.setAttribute('data-page-tag', tags[step]);
+
+    // In a live deployment, you'd also push a dataLayer event here so
+    // GTM can fire a "virtual pageview" for Qualtrics on each step, e.g.:
+    // window.dataLayer && window.dataLayer.push({event:'virtual_pageview', pageTag: tags[step]});
+  }
+
+  function handlePayClick(){
+    payClickCount++;
+    var btn = document.getElementById('pay-btn');
+    if(payClickCount < 4){
+      // Simulate stalled validation — invites rapid re-clicking (rage click trap)
+      return;
+    }
+    btn.textContent = 'Activating…';
+    setTimeout(function(){ goTo(4); }, 400);
+  }
+
+  function togglePanel(){
+    var panel = document.getElementById('se-panel');
+    var btn = document.getElementById('se-toggle');
+    var open = panel.style.display === 'block';
+    panel.style.display = open ? 'none' : 'block';
+    btn.textContent = open ? 'SE Notes ▲' : 'SE Notes ▼';
+  }
+
+  function resetDemo(){
+    payClickCount = 0;
+    document.getElementById('pay-btn').textContent = 'Complete activation';
+    document.querySelectorAll('.plan-card').forEach(function(g){g.classList.remove('selected');});
+    document.getElementById('sim').value='';
+    document.getElementById('fullname').value='';
+    document.getElementById('card').value='';
+    document.getElementById('expiry').value='';
+    goTo(1);
+  }
+</script>
+
+</body>
+</html>
